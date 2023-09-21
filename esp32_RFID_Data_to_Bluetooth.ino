@@ -37,6 +37,10 @@ void setup(void) {
   Serial.println("Waiting for an NFC card ...");
 }
 
+// Variáveis para armazenar o UID do cartão anterior
+uint8_t prevUid[7] = {0, 0, 0, 0, 0, 0, 0};
+uint8_t prevUidLength = 0;
+
 void loop(void) {
   uint8_t success;
   uint8_t uid[] = { 0, 0, 0, 0, 0, 0, 0 };  // Buffer para armazenar o UID retornado
@@ -71,12 +75,30 @@ void loop(void) {
     SerialBT.println("RFID Codes:");
     SerialBT.println(uidCodes);
 
-    // Acende o LED por 500 milissegundos (meio segundo)
-    digitalWrite(LED_PIN, HIGH);
-    delay(500);
-    digitalWrite(LED_PIN, LOW);
-
-    // Aguarda 1 segundo antes de continuar
-    delay(1000);
+    // Verifica se o cartão atual é o mesmo que o cartão anterior
+    if (isSameCard(uid, uidLength)) {
+      // Acende o LED e não aguarda um segundo
+      digitalWrite(LED_PIN, HIGH);
+    } else {
+      // Caso contrário, aguarda 1 segundo antes de desligar o LED
+      delay(1000);
+      digitalWrite(LED_PIN, LOW);
+    }
   }
+}
+
+// Função para verificar se o cartão atual é o mesmo que o cartão anterior
+bool isSameCard(uint8_t newUid[], uint8_t newUidLength) {
+  if (newUidLength != prevUidLength) {
+    return false;
+  }
+
+  for (int i = 0; i < newUidLength; i++) {
+    if (newUid[i] != prevUid[i]) {
+      return false;
+    }
+  }
+
+  // Se chegamos até aqui, os cartões são os mesmos
+  return true;
 }
