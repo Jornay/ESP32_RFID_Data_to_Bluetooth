@@ -4,9 +4,10 @@
 
 #define SDA_PIN 21
 #define SCL_PIN 22
+#define LED_PIN 13 // Pino do LED
 
 Adafruit_PN532 nfc(SDA_PIN, SCL_PIN);
-const char *pin = "1234";  // Change this to a more secure PIN.
+const char *pin = "1234";  // Altere isso para um PIN mais seguro.
 
 //------------------BLUETOOTH-------------------------//
 String device_name = "ESP32-BT-Slave";
@@ -17,31 +18,34 @@ void setup(void) {
   Serial.begin(115200);
   Serial.println("Hello! NFC reader with ESP32");
 
-//------------------BLUETOOTH-------------------------//
+  //------------------BLUETOOTH-------------------------//
   SerialBT.begin(device_name);  // Inicializa o Bluetooth com o nome do dispositivo
-  
+
   #ifdef USE_PIN
   SerialBT.setPin(pin);
   Serial.println("Using PIN");
   pinMode(19, OUTPUT);
   #endif
-//---------------------------------------------------//
+  //---------------------------------------------------//
+
+  pinMode(LED_PIN, OUTPUT); // Configura o pino do LED como saída
+
   nfc.begin();
   uint32_t versiondata = nfc.getFirmwareVersion();
 
-  nfc.SAMConfig();  // Configure board to read NFC tags
+  nfc.SAMConfig();  // Configura a placa para ler tags NFC
   Serial.println("Waiting for an NFC card ...");
 }
 
 void loop(void) {
   uint8_t success;
-  uint8_t uid[] = { 0, 0, 0, 0, 0, 0, 0 };  // Buffer to store the returned UID
-  uint8_t uidLength;                        // Length of the UID (4 or 7 bytes depending on ISO14443A card type)
+  uint8_t uid[] = { 0, 0, 0, 0, 0, 0, 0 };  // Buffer para armazenar o UID retornado
+  uint8_t uidLength;                        // Comprimento do UID (4 ou 7 bytes dependendo do tipo de cartão ISO14443A)
 
   // Armazena os códigos lidos em uma matriz de caracteres
   char uidCodes[64] = ""; // Tamanho máximo da string
 
-  // Wait for an NFC card to be detected
+  // Aguarda a detecção de um cartão NFC
   success = nfc.readPassiveTargetID(PN532_MIFARE_ISO14443A, uid, &uidLength);
 
   if (success) {
@@ -67,7 +71,12 @@ void loop(void) {
     SerialBT.println("RFID Codes:");
     SerialBT.println(uidCodes);
 
-    // Wait 1 second before continuing
+    // Acende o LED por 500 milissegundos (meio segundo)
+    digitalWrite(LED_PIN, HIGH);
+    delay(500);
+    digitalWrite(LED_PIN, LOW);
+
+    // Aguarda 1 segundo antes de continuar
     delay(1000);
   }
 }
