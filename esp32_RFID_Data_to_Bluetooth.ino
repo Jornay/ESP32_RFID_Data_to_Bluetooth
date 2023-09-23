@@ -4,7 +4,7 @@
 
 #define SDA_PIN 21
 #define SCL_PIN 22
-#define LED_PIN 18 // Pino do LED
+#define LED_PIN 18  // Pino do LED
 
 Adafruit_PN532 nfc(SDA_PIN, SCL_PIN);
 const char *pin = "1234";  // Senha para conexão Bluetooth.
@@ -12,25 +12,27 @@ const char *pin = "1234";  // Senha para conexão Bluetooth.
 String device_name = "ESP32-BT-Slave";
 BluetoothSerial SerialBT;
 
+bool cardDetected = false;  // Variável para rastrear se um cartão foi detectado
+
 void setup(void) {
   Serial.begin(115200);
   Serial.println("Hello! NFC reader with ESP32");
   SerialBT.begin(device_name);
-  
-  #ifdef USE_PIN
+
+#ifdef USE_PIN
   SerialBT.setPin(pin);
   Serial.println("Using PIN");
   pinMode(19, OUTPUT);
-  #endif
+#endif
 
   nfc.begin();
   uint32_t versiondata = nfc.getFirmwareVersion();
 
   nfc.SAMConfig();
   Serial.println("Waiting for an NFC card ...");
-  
-  pinMode(LED_PIN, OUTPUT); // Configura o pino do LED como saída
-  digitalWrite(LED_PIN, LOW); // Desliga o LED inicialmente
+
+  pinMode(LED_PIN, OUTPUT);    // Configura o pino do LED como saída
+  digitalWrite(LED_PIN, LOW);  // Desliga o LED inicialmente
 }
 
 void loop(void) {
@@ -48,26 +50,28 @@ void loop(void) {
     Serial.print(uidLength, DEC);
     Serial.println(" bytes");
     Serial.print("UID Value: ");
-    
+
     for (uint8_t i = 0; i < uidLength; i++) {
       Serial.print(" 0x");
       Serial.print(uid[i], HEX);
-      
+
       char hexCode[3];
       sprintf(hexCode, "%02X", uid[i]);
       strcat(uidCodes, hexCode);
     }
-    
+
     Serial.println("");
     SerialBT.println("RFID Codes:");
     SerialBT.println(uidCodes);
-    
-    // Acende o LED quando um cartão é detectado
-    digitalWrite(LED_PIN, HIGH);
-    delay(1000); // Mantém o LED aceso por 1 segundo
-    
-    // Desliga o LED
-    digitalWrite(LED_PIN, LOW);
-    delay(1000); // Aguarda 1 segundo antes de continuar
+    if (cardDetected) {
+      digitalWrite(LED_PIN, LOW);
+      cardDetected = false;
+      
+    } else {
+      digitalWrite(LED_PIN, HIGH);
+      cardDetected = true;
+
+    }
+    delay(1000);
   }
 }
