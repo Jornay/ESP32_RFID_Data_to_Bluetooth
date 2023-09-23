@@ -13,6 +13,7 @@ String device_name = "ESP32-BT-Slave";
 BluetoothSerial SerialBT;
 
 bool cardDetected = false;  // Variável para rastrear se um cartão foi detectado
+String lastCard = "";      // Variável para armazenar o código do último cartão detectado
 
 void setup(void) {
   Serial.begin(115200);
@@ -63,14 +64,17 @@ void loop(void) {
     Serial.println("");
     SerialBT.println("RFID Codes:");
     SerialBT.println(uidCodes);
-    if (cardDetected) {
+
+    if (strcmp(uidCodes, lastCard.c_str()) == 0) {
+      // Mesmo cartão detectado, apaga o LED
       digitalWrite(LED_PIN, LOW);
       cardDetected = false;
-      
-    } else {
+      lastCard = ""; // Redefine o código do último cartão detectado
+    } else if(cardDetected != true) {
+      // Novo cartão detectado, acende o LED
       digitalWrite(LED_PIN, HIGH);
       cardDetected = true;
-
+      lastCard = uidCodes; // Atualiza o código do último cartão detectado
     }
     delay(1000);
   }
